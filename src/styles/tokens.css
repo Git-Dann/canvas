@@ -1,0 +1,184 @@
+/*
+ * Design tokens.
+ *
+ * Source: Untitled UI PRO VARIABLES v8.0, Figma file eE8CjxDnMcBDg7Yj6KfF9Q.
+ * Collections `_Primitives`, `1. Color modes` (Light / Dark), `2. Radius`,
+ * `3. Spacing`. Names match the Figma variables (Colors/Background/bg-primary
+ * becomes --color-bg-primary), so a token named in Figma can be found here by
+ * name. The Figma Brand scale (purple) is replaced by Emergency Orange.
+ * Full mapping and rules: docs/BRAND.md.
+ */
+
+:root {
+  /* ── primitives ─────────────────────────────────────────────────────── */
+  --color-white: #ffffff;
+  --color-black: #000000;
+
+  /* Emergency Orange: the brand scale. 500 is the brand colour itself. */
+  --color-brand-25: #fff9f5;
+  --color-brand-50: #fff2eb;
+  --color-brand-100: #ffe2d1;
+  --color-brand-200: #ffc4a3;
+  --color-brand-300: #ff9e6b;
+  --color-brand-400: #ff7633;
+  --color-brand-500: #ff4f00;
+  --color-brand-600: #e64700;
+  --color-brand-700: #c23a00;
+  --color-brand-800: #962d00;
+  --color-brand-900: #6e2200;
+  --color-brand-950: #3d1300;
+
+  --color-gray-25: #fdfdfd;
+  --color-gray-50: #fafafa;
+  --color-gray-100: #f5f5f5;
+  --color-gray-200: #e5e5e5;
+  --color-gray-300: #d4d4d4;
+  --color-gray-400: #a3a3a3;
+  --color-gray-500: #737373;
+  --color-gray-600: #525252;
+  --color-gray-700: #404040;
+  --color-gray-800: #262626;
+  --color-gray-900: #171717;
+  --color-gray-950: #0a0a0a;
+
+  --color-error-50: #fef2f2;
+  --color-error-500: #ef4444;
+  --color-error-600: #dc2626;
+  --color-error-700: #b91c1c;
+  --color-warning-50: #fefce8;
+  --color-warning-500: #eab308;
+  --color-warning-700: #a16207;
+  --color-success-50: #f0fdf4;
+  --color-success-500: #22c55e;
+  --color-success-700: #15803d;
+
+  /* ── radius (2. Radius) ─────────────────────────────────────────────── */
+  --radius-xxs: 2px;
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-full: 9999px;
+
+  /* ── spacing (3. Spacing) ───────────────────────────────────────────── */
+  --spacing-xxs: 2px;
+  --spacing-xs: 4px;
+  --spacing-sm: 6px;
+  --spacing-md: 8px;
+  --spacing-lg: 12px;
+  --spacing-xl: 16px;
+  --spacing-2xl: 20px;
+  --spacing-3xl: 24px;
+  --spacing-4xl: 32px;
+  --spacing-5xl: 40px;
+
+  /* ── type ───────────────────────────────────────────────────────────── */
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --text-xs: 12px;
+  --text-xs-lh: 18px;
+  --text-sm: 14px;
+  --text-sm-lh: 20px;
+  --text-md: 16px;
+  --text-md-lh: 24px;
+
+  /* ── effects (Effects / Shadows, light) ─────────────────────────────── */
+  --shadow-xs: 0 1px 2px rgb(10 13 18 / 0.05);
+  --shadow-sm: 0 1px 3px rgb(10 13 18 / 0.1), 0 1px 2px -1px rgb(10 13 18 / 0.1);
+  --shadow-lg: 0 12px 16px -4px rgb(10 13 18 / 0.08), 0 4px 6px -2px rgb(10 13 18 / 0.03), 0 2px 2px -1px rgb(10 13 18 / 0.04);
+  --shadow-xl: 0 20px 24px -4px rgb(10 13 18 / 0.08), 0 8px 8px -4px rgb(10 13 18 / 0.03), 0 3px 3px -1.5px rgb(10 13 18 / 0.04);
+  --shadow-skeuomorphic: 0 0 0 1px rgb(10 13 18 / 0.18) inset, 0 -2px 0 0 rgb(10 13 18 / 0.05) inset;
+
+  /* ── semantic: light mode (1. Color modes / Light mode) ─────────────── */
+  --color-text-primary: var(--color-gray-900);
+  --color-text-secondary: var(--color-gray-700);
+  --color-text-tertiary: var(--color-gray-600);
+  --color-text-quaternary: var(--color-gray-500);
+  --color-text-placeholder: var(--color-gray-500);
+  --color-text-disabled: var(--color-gray-500);
+  --color-text-brand-secondary: var(--color-brand-700);
+  --color-text-error-primary: var(--color-error-600);
+
+  --color-border-primary: var(--color-gray-300);
+  --color-border-secondary: var(--color-gray-200);
+  --color-border-brand: var(--color-brand-500);
+
+  --color-fg-secondary: var(--color-gray-700);
+  --color-fg-quaternary: var(--color-gray-400);
+  --color-fg-brand-primary: var(--color-brand-500);
+
+  --color-bg-primary: var(--color-white);
+  --color-bg-primary_hover: var(--color-gray-50);
+  --color-bg-secondary: var(--color-gray-50);
+  --color-bg-tertiary: var(--color-gray-100);
+  --color-bg-active: var(--color-gray-50);
+  --color-bg-disabled: var(--color-gray-100);
+  --color-bg-overlay: var(--color-gray-950);
+  --color-bg-brand-primary: var(--color-brand-50);
+  --color-bg-brand-secondary: var(--color-brand-100);
+  --color-bg-brand-solid: var(--color-brand-500);
+  --color-bg-brand-solid_hover: var(--color-brand-600);
+  --color-bg-error-primary: var(--color-error-50);
+  --color-bg-warning-primary: var(--color-warning-50);
+
+  /*
+   * Canvas brand rule: text on the brand fill is near-black, not white.
+   * Emergency Orange 500 with white text is 3.3:1 (fails WCAG AA); with
+   * gray-950 it is 6.0:1. Keeps the true orange on every primary button.
+   */
+  --color-text-on-brand: var(--color-gray-950);
+
+  --color-focus-ring: var(--color-brand-500);
+  --ring-brand: 0 0 0 4px rgb(255 79 0 / 0.24);
+
+  /* the stage behind the artboard */
+  --color-stage: var(--color-gray-100);
+  --color-stage-dot: rgb(10 10 10 / 0.08);
+
+  color-scheme: light;
+}
+
+/* ── semantic: dark mode (1. Color modes / Dark mode) ───────────────────── */
+:root[data-theme='dark'] {
+  --color-text-primary: var(--color-gray-50);
+  --color-text-secondary: var(--color-gray-300);
+  --color-text-tertiary: var(--color-gray-400);
+  --color-text-quaternary: var(--color-gray-400);
+  --color-text-placeholder: var(--color-gray-500);
+  --color-text-disabled: var(--color-gray-500);
+  --color-text-brand-secondary: var(--color-brand-400);
+  --color-text-error-primary: var(--color-error-500);
+
+  --color-border-primary: var(--color-gray-700);
+  --color-border-secondary: var(--color-gray-800);
+  --color-border-brand: var(--color-brand-400);
+
+  --color-fg-secondary: var(--color-gray-300);
+  --color-fg-quaternary: var(--color-gray-600);
+  --color-fg-brand-primary: var(--color-brand-500);
+
+  --color-bg-primary: var(--color-gray-950);
+  --color-bg-primary_hover: var(--color-gray-800);
+  --color-bg-secondary: var(--color-gray-900);
+  --color-bg-tertiary: var(--color-gray-800);
+  --color-bg-active: var(--color-gray-800);
+  --color-bg-disabled: var(--color-gray-800);
+  --color-bg-brand-primary: rgb(255 79 0 / 0.12);
+  --color-bg-brand-secondary: rgb(255 79 0 / 0.2);
+  --color-bg-brand-solid: var(--color-brand-500);
+  --color-bg-brand-solid_hover: var(--color-brand-400);
+  --color-bg-error-primary: rgb(239 68 68 / 0.12);
+  --color-bg-warning-primary: rgb(234 179 8 / 0.12);
+
+  --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-lg: 0 12px 16px -4px rgb(0 0 0 / 0.4), 0 4px 6px -2px rgb(0 0 0 / 0.2);
+  --shadow-xl: 0 20px 24px -4px rgb(0 0 0 / 0.5), 0 8px 8px -4px rgb(0 0 0 / 0.2);
+  --shadow-skeuomorphic: 0 0 0 1px rgb(255 255 255 / 0.12) inset, 0 -2px 0 0 rgb(0 0 0 / 0.2) inset;
+
+  --color-stage: #050505;
+  --color-stage-dot: rgb(255 255 255 / 0.07);
+
+  color-scheme: dark;
+}

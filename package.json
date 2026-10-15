@@ -1,0 +1,27 @@
+{
+  "name": "gitwork-canvas",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Canvas by Gitwork: generative artwork tools on the Deck kernel. One file is the app and the artwork.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && SINGLEFILE=1 vite build",
+    "build:foundry": "tsc --noEmit && SINGLEFILE=1 vite build --outDir \"${FOUNDRY_PUBLIC:-../docs-by-gitwork/public}/canvas\" --emptyOutDir",
+    "preview": "vite preview --port 4173",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "verify": "npm run typecheck && npm test && npm run build && npm run test:e2e",
+    "new-tool": "node scripts/new-tool.mjs"
+  },
+  "devDependencies": {
+    "@fontsource-variable/inter": "^5.3.0",
+    "@fontsource-variable/jetbrains-mono": "^5.3.0",
+    "@playwright/test": "^1.56.1",
+    "typescript": "5.8",
+    "vite": "^7.3.7",
+    "vite-plugin-singlefile": "^2.3.3",
+    "vitest": "^3.2.7"
+  }
+}

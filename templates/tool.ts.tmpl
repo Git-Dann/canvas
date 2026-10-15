@@ -1,0 +1,34 @@
+// __NAME__. Scaffolded by `npm run new-tool`. See .claude/skills/canvas-new-tool.
+// Rules: pure function of params, seeded rng only, return svgDoc(), reuse
+// helpers from ../core and ./common before writing new ones.
+
+import type { Pt } from '../core/svg'
+import type { Tool } from '../core/types'
+import { el, smoothPath, svgDoc } from '../core/svg'
+import { palette } from '../core/palette'
+import { innerBox, marginParam, num, opacityParam, paletteParam, str, strokeWidthParam } from './common'
+
+export const __CONST__: Tool = {
+  id: '__ID__',
+  name: '__NAME__',
+  group: '__GROUP__',
+  blurb: 'TODO: one sentence on what this makes.',
+  icon: '<path d="M4 12h16M12 4v16"/>',
+  params: [
+    { key: 'count', label: 'Count', section: '__NAME__', type: 'number', default: 12, min: 1, max: 100, step: 1 },
+    marginParam(0.1),
+    strokeWidthParam(2),
+    opacityParam(1),
+    paletteParam(),
+  ],
+  render({ params: p, width, height, background, rng }) {
+    const box = innerBox(width, height, num(p, 'margin'))
+    const colors = palette(str(p, 'palette')).colors
+    let body = ''
+    for (let i = 0; i < num(p, 'count'); i++) {
+      const pts: Pt[] = Array.from({ length: 6 }, () => [box.x + rng() * box.w, box.y + rng() * box.h] as Pt)
+      body += el('path', { d: smoothPath(pts), fill: 'none', stroke: colors[i % colors.length], 'stroke-width': num(p, 'strokeWidth'), 'stroke-linecap': 'round' })
+    }
+    return { svg: svgDoc({ width, height, background, body: `<g opacity="${num(p, 'opacity')}">${body}</g>` }) }
+  },
+}
