@@ -139,29 +139,39 @@ test("follows Foundry's theme and has no toggle of its own", async ({ page, cont
 
 test('the artboard is one setting shared by every tool, and it saves', async ({ page, context }) => {
   await open(page, 'shapes')
-  // One artboard block, above the tool's settings, marked as shared.
-  await expect(page.locator('.props-global .props-head')).toHaveCount(1)
-  await expect(page.locator('.props-global .props-head')).toContainText('Every tool')
-  await expect(page.locator('.props-tool .props-head', { hasText: 'Artboard' })).toHaveCount(0)
+  // The artboard is a topbar dropdown, marked as shared, and not a tool section.
+  await expect(page.locator('.props .props-head', { hasText: 'Artboard' })).toHaveCount(0)
+  const pop = page.locator('#artboard-pop')
+  await expect(pop).toBeHidden()
+  await page.locator('#artboard-btn').click()
+  await expect(pop).toBeVisible()
+  await expect(pop).toContainText('Every tool')
 
   await page.locator('#artboard-size').selectOption('story')
-  const seed = page.locator('.props-global input[aria-label="Seed"]')
+  const seed = pop.locator('input[aria-label="Seed"]')
   await seed.fill('4242')
   await seed.press('Enter')
-  await page.locator('.props-global').getByRole('button', { name: '#FF4F00', exact: true }).click()
+  await pop.getByRole('button', { name: '#FF4F00', exact: true }).click()
+  // Escape closes it and the button says what is set.
+  await page.keyboard.press('Escape')
+  await expect(pop).toBeHidden()
+  await expect(page.locator('#artboard-btn')).toContainText('1080 × 1920')
+  await page.locator('#artboard-btn').click()
 
   for (const tool of TOOLS) {
     await page.locator(`.tool-btn[data-tool="${tool}"]`).click()
     await expect(page.locator('.artboard svg'), tool).toHaveAttribute('viewBox', '0 0 1080 1920')
-    await expect(page.locator('#artboard-size'), tool).toHaveValue('story')
-    await expect(seed, tool).toHaveValue('4242')
+    await expect(page.locator('#artboard-btn'), tool).toContainText('1080 × 1920')
     await expect(page.locator('.stage-bar'), tool).toContainText('seed 4242')
     await expect(page.locator('.artboard svg > rect').first(), tool).toHaveAttribute('fill', '#FF4F00')
   }
 
   // Resetting a tool's settings leaves the shared artboard alone.
   await page.locator('.props-tool button', { hasText: /^Reset/ }).click()
+  await expect(page.locator('#artboard-btn')).toContainText('1080 × 1920')
+  await page.locator('#artboard-btn').click()
   await expect(page.locator('#artboard-size')).toHaveValue('story')
+  await page.keyboard.press('Escape')
 
   await page.evaluate(() => delete (window as any).showSaveFilePicker)
   const download = page.waitForEvent('download')
@@ -175,7 +185,7 @@ test('the artboard is one setting shared by every tool, and it saves', async ({ 
   for (const tool of ['shapes', 'mesh-gradient', 'dither']) {
     await reopened.locator(`.tool-btn[data-tool="${tool}"]`).click()
     await expect(reopened.locator('.artboard svg'), tool).toHaveAttribute('viewBox', '0 0 1080 1920')
-    await expect(reopened.locator('.props-global input[aria-label="Seed"]'), tool).toHaveValue('4242')
+    await expect(reopened.locator('.stage-bar'), tool).toContainText('seed 4242')
   }
 })
 
@@ -198,4 +208,18 @@ test('no control in any tool can scroll the frame up the page', async ({ page })
     await page.evaluate(() => document.querySelector('.props .props-reset button')?.scrollIntoView())
     expect(await frameOffset(), `${tool} scrollIntoView`).toEqual({ doc: 0, app: 0 })
   }
+})
+
+test('the artboard dropdown stays on screen on a phone and closes on an outside click', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 })
+  await open(page, 'shapes')
+  await page.locator('#artboard-btn').click()
+  const pop = page.locator('#artboard-pop')
+  await expect(pop).toBeVisible()
+  const box = (await pop.boundingBox())!
+  expect(box.x).toBeGreaterThanOrEqual(0)
+  expect(box.x + box.width).toBeLessThanOrEqual(375)
+  if (SHOTS) await page.screenshot({ path: 'tests/screenshots/artboard-pop-375.png' })
+  await page.mouse.click(5, 790)
+  await expect(pop).toBeHidden()
 })

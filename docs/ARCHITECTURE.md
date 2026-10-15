@@ -27,7 +27,7 @@ URL / embedded doc ──► parseDoc ──► Store (undo, transient drags)
 
 ## The document
 
-`CanvasDoc` in `src/core/doc.ts`: `docId`, `title`, `tool`, `artboard` (size, background, seed), which is one setting for the whole document and shared by every tool, and `params` per tool, so switching tools keeps each tool's settings. The shell shows the artboard in its own block above the tool's settings (`.props-global`) and never rebuilds it on a tool switch. Values are sanitised against the tool's specs on every read, so files survive param changes. Uploaded images are stored as downscaled data URLs inside the file.
+`CanvasDoc` in `src/core/doc.ts`: `docId`, `title`, `tool`, `artboard` (size, background, seed), which is one setting for the whole document and shared by every tool, and `params` per tool, so switching tools keeps each tool's settings. The shell shows the artboard as a topbar dropdown (`#artboard-btn` / `#artboard-pop`), apart from any tool, and never rebuilds it on a tool switch. Values are sanitised against the tool's specs on every read, so files survive param changes. Uploaded images are stored as downscaled data URLs inside the file.
 
 ## Tests
 

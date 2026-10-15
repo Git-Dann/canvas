@@ -170,12 +170,34 @@ button, input, select, textarea { font: inherit; color: inherit; }
   background: var(--color-bg-primary);
   padding-bottom: var(--spacing-4xl);
 }
-/* The artboard block is shared by every tool, so it sits above the tool's
-   settings, unnumbered, and the tool's sections count from 01 under it. */
-.props-global { border-bottom: 2px solid var(--color-border-primary); }
+/* The artboard is shared by every tool, so it is a topbar dropdown rather than
+   a section of any one tool's settings. */
 .props-tool { counter-reset: sec; }
-.props-head--global { color: var(--color-text-secondary); }
-.props-global .props-head::before { content: none; }
+.artboard-btn .label { font-family: var(--font-mono); font-size: var(--text-xs); }
+.ab-dot { width: 14px; height: 14px; flex: none; border-radius: var(--radius-full); border: 1px solid var(--color-border-primary); }
+.ab-dot.is-transparent { background: repeating-conic-gradient(#d0d0d0 0 25%, #fff 0 50%) 0 0 / 6px 6px; }
+.popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 50;
+  width: min(320px, calc(100vw - 32px));
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border-secondary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+.popover[hidden] { display: none; }
+.popover-body { display: flex; flex-direction: column; gap: var(--spacing-xl); padding: var(--spacing-xl); }
+.popover-title {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  font: 500 11px / 1 var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
 .props-head-note {
   margin-left: var(--spacing-md);
   padding: 2px 6px;
@@ -239,6 +261,11 @@ button, input, select, textarea { font: inherit; color: inherit; }
   .topbar { height: auto; flex-wrap: wrap; padding: var(--spacing-md) var(--spacing-xl); row-gap: var(--spacing-sm); }
   .wordmark-by, .topbar-divider, .save-state, .btn .label { display: none; }
   .title-input { flex: 1 1 120px; max-width: none; }
+  /* On a phone the topbar wraps and its groups move about, so the artboard
+     dropdown hangs from the whole bar, inset to the screen, instead. */
+  .topbar { position: relative; }
+  .topbar-group:has(> .artboard-btn) { position: static; }
+  .popover { left: var(--spacing-xl); right: var(--spacing-xl); width: auto; }
   .topbar-spacer { display: none; }
   .tools {
     display: flex;

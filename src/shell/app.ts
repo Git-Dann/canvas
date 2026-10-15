@@ -16,7 +16,6 @@ import { resolveRasters } from './rasters'
 import { copySvg, exportPng, exportSvg, exportText, slug } from './export'
 
 const FOUNDRY_THEME_KEY = 'gitwork.theme.v1'
-const ARTBOARD_SECTION = 'Artboard'
 const LAST_DOC_KEY = 'canvas-last-doc'
 
 const store = (k: string, v?: string) => {
@@ -52,6 +51,10 @@ export function mountApp(root: HTMLElement, doc: CanvasDoc, opts: { embedded: bo
   const saveBtn = h('button', { class: 'btn btn-secondary', 'data-tip': 'Save this file  ⌘S', html: `${icon.save}<span class="label">Save</span>` })
   const exportBtn = h('button', { class: 'btn btn-primary', 'aria-haspopup': 'menu', 'aria-expanded': 'false', html: `${icon.download}<span class="label">Export</span>${icon.chevronDown}` })
   const menu = h('div', { class: 'menu', role: 'menu', hidden: true, style: 'right:0;top:calc(100% + 6px)' })
+  // The artboard is one setting for the whole file, shared by every tool, so it
+  // lives in the topbar rather than among a tool's settings.
+  const artboardBtn = h('button', { class: 'btn btn-secondary artboard-btn', id: 'artboard-btn', 'aria-haspopup': 'dialog', 'aria-expanded': 'false', 'aria-controls': 'artboard-pop', 'data-tip': 'Artboard: size, background, seed' })
+  const artboardBox = h('div', { class: 'popover', id: 'artboard-pop', role: 'dialog', 'aria-label': 'Artboard', hidden: true })
   const alert = h('div', { class: 'alert', role: 'status', hidden: true, style: 'grid-area:alert' })
 
   const topbar = h('header', { class: 'topbar' },
@@ -68,6 +71,7 @@ export function mountApp(root: HTMLElement, doc: CanvasDoc, opts: { embedded: bo
     saveState,
     h('span', { class: 'topbar-spacer' }),
     h('div', { class: 'topbar-group' }, undoBtn, redoBtn),
+    h('div', { class: 'topbar-group' }, artboardBtn, artboardBox),
     h('div', { class: 'topbar-group' }, shuffleBtn, saveBtn, h('div', { class: 'topbar-group' }, exportBtn, menu)))
 
   const toolsNav = h('nav', { class: 'tools', 'aria-label': 'Tools' })
@@ -90,9 +94,8 @@ export function mountApp(root: HTMLElement, doc: CanvasDoc, opts: { embedded: bo
   // The artboard is one setting for the whole document, shared by every tool,
   // so it sits in its own block above the tool's settings and is not rebuilt
   // when the tool changes. Tool sections number from 01 under it.
-  const artboardBox = h('div', { class: 'props-global' })
   const toolBox = h('div', { class: 'props-tool' })
-  const props = h('aside', { class: 'props', 'aria-label': 'Settings' }, artboardBox, toolBox)
+  const props = h('aside', { class: 'props', 'aria-label': 'Settings' }, toolBox)
   const toasts = h('div', { class: 'toasts', 'aria-live': 'polite' })
 
   root.append(h('div', { class: 'app' }, topbar, alert, toolsNav, stage, props), toasts)
@@ -164,10 +167,6 @@ export function mountApp(root: HTMLElement, doc: CanvasDoc, opts: { embedded: bo
     const open = !collapsed.has(name)
     const body = h('div', { class: 'props-body', id, hidden: !open }, ...children)
     const head = h('button', { class: 'props-head', 'aria-expanded': String(open), 'aria-controls': id }, name)
-    if (name === ARTBOARD_SECTION) {
-      head.classList.add('props-head--global')
-      head.append(h('span', { class: 'props-head-note' }, 'Every tool'))
-    }
     head.addEventListener('click', () => {
       const nowOpen = body.hidden
       body.hidden = !nowOpen
@@ -195,7 +194,10 @@ export function mountApp(root: HTMLElement, doc: CanvasDoc, opts: { embedded: bo
   /** Rebuild the artboard block only when it shows something out of date. */
   let shownArtboard = ''
   function syncArtboard(force = false) {
-    const key = JSON.stringify(s.doc.artboard)
+    const ab = s.doc.artboard
+    const swatch = ab.background === 'transparent' ? 'is-transparent' : ''
+    artboardBtn.innerHTML = `<span class="ab-dot ${swatch}" style="${swatch ? '' : `background:${ab.background}`}"></span><span class="label">${ab.width} × ${ab.height}</span>${icon.chevronDown}`
+    const key = JSON.stringify(ab)
     if (!force && key === shownArtboard) return
     // Never yank a control out from under a person mid-edit; a structural
     // change (undo, restore, open) always wins.
@@ -240,7 +242,8 @@ export function mountApp(root: HTMLElement, doc: CanvasDoc, opts: { embedded: bo
     })
     const lbl = (text: string, el: HTMLElement, forId?: string) =>
       h('div', { class: 'field' }, h('label', { class: 'field-label', for: forId }, text), el)
-    return section(ARTBOARD_SECTION,
+    return h('div', { class: 'popover-body' },
+      h('p', { class: 'popover-title' }, 'Artboard', h('span', { class: 'props-head-note' }, 'Every tool')),
       lbl('Size', h('div', { class: 'field' }, preset, custom), 'artboard-size'),
       lbl('Background', bg),
       lbl('Seed', h('div', { class: 'seed-row' }, seed, roll)))
@@ -321,6 +324,7 @@ export function mountApp(root: HTMLElement, doc: CanvasDoc, opts: { embedded: bo
   }
   exportBtn.addEventListener('click', () => {
     if (!menu.hidden) return closeMenu()
+    closeArtboard()
     buildMenu()
     menu.hidden = false
     exportBtn.setAttribute('aria-expanded', 'true')
@@ -339,6 +343,31 @@ export function mountApp(root: HTMLElement, doc: CanvasDoc, opts: { embedded: bo
       exportBtn.focus()
     } else return
     e.preventDefault()
+  })
+
+  // ── artboard popover ───────────────────────────────────────────────────
+  const closeArtboard = (focusBtn = false) => {
+    if (artboardBox.hidden) return
+    artboardBox.hidden = true
+    artboardBtn.setAttribute('aria-expanded', 'false')
+    if (focusBtn) artboardBtn.focus()
+  }
+  artboardBtn.addEventListener('click', () => {
+    if (!artboardBox.hidden) return closeArtboard()
+    closeMenu()
+    syncArtboard(true)
+    artboardBox.hidden = false
+    artboardBtn.setAttribute('aria-expanded', 'true')
+    artboardBox.querySelector<HTMLElement>('select, input, button')?.focus()
+  })
+  document.addEventListener('pointerdown', (e) => {
+    if (!artboardBox.contains(e.target as Node) && !artboardBtn.contains(e.target as Node)) closeArtboard()
+  })
+  artboardBox.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      e.stopPropagation()
+      closeArtboard(true)
+    }
   })
 
   // ── theme ────────────────────────────────────────────────────────────────
