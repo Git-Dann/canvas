@@ -55,13 +55,14 @@ export function mountApp(root: HTMLElement, doc: CanvasDoc, opts: { embedded: bo
   const alert = h('div', { class: 'alert', role: 'status', hidden: true, style: 'grid-area:alert' })
 
   const topbar = h('header', { class: 'topbar' },
+    // Same as Deck: when hosted in Foundry, the first slot is the way back.
+    servedByFoundry()
+      ? h('a', { class: 'back-link', href: '/app', title: 'Back to Foundry' }, '← Foundry')
+      : null,
     h('a', { class: 'wordmark', href: '?', 'aria-label': 'Canvas by Gitwork, new artwork' },
       h('span', { class: 'wordmark-mark', html: icon.mark }),
       h('span', { class: 'wordmark-name' }, 'Canvas'),
       h('span', { class: 'wordmark-by' }, 'by Gitwork')),
-    servedByFoundry()
-      ? h('a', { class: 'back-link', href: '/app', title: 'Back to Foundry' }, '← Foundry')
-      : null,
     h('span', { class: 'topbar-divider' }),
     title,
     saveState,
