@@ -187,3 +187,15 @@ describe('artboard', () => {
     expect(newDoc('shapes').title).toBe('Gitwork artwork')
   })
 })
+
+describe('variation names', () => {
+  it('names a seed the same way every time, and these never change', async () => {
+    const { variationName } = await import('../../src/core/variation-name')
+    // Pinned: a saved artwork must keep its name. Reordering the word lists fails this.
+    expect(variationName(0)).toBe('Amber Arch')
+    expect(variationName(1234)).toBe(variationName(1234))
+    expect(variationName(217262)).toMatch(/^[A-Z][a-z]+ [A-Z][a-z]+$/)
+    const names = new Set(Array.from({ length: 500 }, (_, i) => variationName(i * 7919)))
+    expect(names.size).toBeGreaterThan(400)
+  })
+})

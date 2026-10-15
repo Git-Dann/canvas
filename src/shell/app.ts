@@ -5,6 +5,7 @@ import type { CanvasDoc } from '../core/doc'
 import type { ParamValue, RenderResult, Tool } from '../core/types'
 import { ARTBOARDS, defaultParams, paramsFor, parseDoc } from '../core/doc'
 import { createRng, freshSeed } from '../core/rng'
+import { variationName } from '../core/variation-name'
 import { TOOLS, toolById } from '../tools'
 import { saveFile, currentFileName } from '../../kernel/src/save.ts'
 import { addVersion, clearRecovery, getRecovery, putRecovery } from '../../kernel/src/autosave.ts'
@@ -47,13 +48,13 @@ export function mountApp(root: HTMLElement, doc: CanvasDoc, opts: { embedded: bo
   const saveState = h('span', { class: 'save-state', 'aria-live': 'polite' })
   const undoBtn = h('button', { class: 'btn btn-tertiary btn-icon', 'aria-label': 'Undo', 'data-tip': 'Undo  ⌘Z', html: icon.undo })
   const redoBtn = h('button', { class: 'btn btn-tertiary btn-icon', 'aria-label': 'Redo', 'data-tip': 'Redo  ⇧⌘Z', html: icon.redo })
-  const shuffleBtn = h('button', { class: 'btn btn-secondary', 'data-tip': 'New seed  R', html: `${icon.shuffle}<span class="label">Randomise</span>` })
+  const shuffleBtn = h('button', { class: 'btn btn-secondary', 'data-tip': 'New variation  R', html: `${icon.shuffle}<span class="label">Randomise</span>` })
   const saveBtn = h('button', { class: 'btn btn-secondary', 'data-tip': 'Save this file  ⌘S', html: `${icon.save}<span class="label">Save</span>` })
   const exportBtn = h('button', { class: 'btn btn-primary', 'aria-haspopup': 'menu', 'aria-expanded': 'false', html: `${icon.download}<span class="label">Export</span>${icon.chevronDown}` })
   const menu = h('div', { class: 'menu', role: 'menu', hidden: true, style: 'right:0;top:calc(100% + 6px)' })
   // The artboard is one setting for the whole file, shared by every tool, so it
   // lives in the topbar rather than among a tool's settings.
-  const artboardBtn = h('button', { class: 'btn btn-secondary artboard-btn', id: 'artboard-btn', 'aria-haspopup': 'dialog', 'aria-expanded': 'false', 'aria-controls': 'artboard-pop', 'data-tip': 'Artboard: size, background, seed' })
+  const artboardBtn = h('button', { class: 'btn btn-secondary artboard-btn', id: 'artboard-btn', 'aria-haspopup': 'dialog', 'aria-expanded': 'false', 'aria-controls': 'artboard-pop', 'data-tip': 'Artboard: size, background, variation' })
   const artboardBox = h('div', { class: 'popover', id: 'artboard-pop', role: 'dialog', 'aria-label': 'Artboard', hidden: true })
   const alert = h('div', { class: 'alert', role: 'status', hidden: true, style: 'grid-area:alert' })
 
@@ -161,7 +162,8 @@ export function mountApp(root: HTMLElement, doc: CanvasDoc, opts: { embedded: bo
     const bg = s.doc.artboard.background
     artboard.classList.toggle('is-transparent', bg === 'transparent')
     artboard.style.backgroundColor = bg === 'transparent' ? '' : bg
-    sizeInfo.textContent = `${width} × ${height} · ${Math.round(scale * 100)}% · seed ${s.doc.artboard.seed}`
+    sizeInfo.textContent = `${width} × ${height} · ${Math.round(scale * 100)}% · ${variationName(s.doc.artboard.seed)}`
+    sizeInfo.title = `Variation ${s.doc.artboard.seed}`
   }
   new ResizeObserver(fit).observe(viewport)
 
@@ -208,8 +210,10 @@ export function mountApp(root: HTMLElement, doc: CanvasDoc, opts: { embedded: bo
     // Never yank a control out from under a person mid-edit; a structural
     // change (undo, restore, open) always wins.
     if (!force && artboardBox.contains(document.activeElement)) {
-      const seed = artboardBox.querySelector<HTMLInputElement>('input[aria-label="Seed"]')
+      const seed = artboardBox.querySelector<HTMLInputElement>('input[aria-label="Variation number"]')
       if (seed && seed !== document.activeElement) seed.value = String(s.doc.artboard.seed)
+      const name = artboardBox.querySelector('.variation-name')
+      if (name) name.textContent = variationName(s.doc.artboard.seed)
       return
     }
     shownArtboard = key
@@ -238,10 +242,30 @@ export function mountApp(root: HTMLElement, doc: CanvasDoc, opts: { embedded: bo
     dim(w, 'width')
     dim(hh, 'height')
 
-    const seed = h('input', { class: 'input', type: 'number', min: 0, max: 999999, value: String(ab.seed), 'aria-label': 'Seed' })
-    seed.addEventListener('change', () => setArtboard({ seed: Math.max(0, Math.round(Number(seed.value) || 0)) }))
-    const roll = h('button', { class: 'btn btn-secondary btn-icon', 'aria-label': 'New seed', 'data-tip': 'New seed', html: icon.shuffle })
+    // Variation: a friendly name for the seed, with back/forward through the ones
+    // tried this session. The number is still there for anyone who wants it.
+    const prev = h('button', { class: 'btn btn-secondary btn-icon', 'aria-label': 'Previous variation', 'data-tip': 'Previous', html: icon.chevronLeft, disabled: !canStep(-1) })
+    const next = h('button', { class: 'btn btn-secondary btn-icon', 'aria-label': 'Next variation', 'data-tip': 'Next', html: icon.chevronRight, disabled: !canStep(1) })
+    const roll = h('button', { class: 'btn btn-secondary btn-icon', 'aria-label': 'New variation', 'data-tip': 'New variation  R', html: icon.shuffle })
+    prev.addEventListener('click', () => step(-1))
+    next.addEventListener('click', () => step(1))
     roll.addEventListener('click', randomise)
+    const seed = h('input', { class: 'input', type: 'number', min: 0, max: 999999, value: String(ab.seed), 'aria-label': 'Variation number' })
+    seed.addEventListener('change', () => {
+      const n = Math.max(0, Math.round(Number(seed.value) || 0))
+      remember(n)
+      setArtboard({ seed: n })
+      syncArtboard(true)
+    })
+    // Collapsed by default: most people only ever press Randomise.
+    const variation = h('details', { class: 'variation-acc', open: variationOpen },
+      h('summary', {},
+        h('span', { class: 'field-label' }, 'Variation'),
+        h('span', { class: 'variation-name' }, variationName(ab.seed)),
+        h('span', { class: 'variation-chev', html: icon.chevronDown })),
+      h('p', { class: 'field-hint' }, 'Same variation, same artwork.'),
+      h('div', { class: 'variation' }, seed, h('div', { class: 'variation-actions' }, prev, roll, next)))
+    variation.addEventListener('toggle', () => (variationOpen = variation.open))
 
     const bg = colourPicker('background', ab.background, {
       set: (_k, v, transient) => setArtboard({ background: String(v) }, transient),
@@ -252,7 +276,7 @@ export function mountApp(root: HTMLElement, doc: CanvasDoc, opts: { embedded: bo
       h('p', { class: 'popover-title' }, 'Artboard', h('span', { class: 'props-head-note' }, 'Every tool')),
       lbl('Size', h('div', { class: 'field' }, preset, custom), 'artboard-size'),
       lbl('Background', bg),
-      lbl('Seed', h('div', { class: 'seed-row' }, seed, roll)))
+      variation)
   }
 
   // ── actions ──────────────────────────────────────────────────────────────
@@ -266,8 +290,31 @@ export function mountApp(root: HTMLElement, doc: CanvasDoc, opts: { embedded: bo
     history.replaceState(null, '', url)
   }
 
+  let variationOpen = false
+  // Variations tried this session, so a good one is never lost to Randomise.
+  const seen: number[] = [doc.artboard.seed]
+  let seenAt = 0
+  function remember(seed: number) {
+    if (seen[seenAt] === seed) return
+    seen.splice(seenAt + 1)
+    seen.push(seed)
+    seenAt = seen.length - 1
+  }
+  function canStep(dir: -1 | 1) {
+    return seenAt + dir >= 0 && seenAt + dir < seen.length
+  }
+  function step(dir: -1 | 1) {
+    if (!canStep(dir)) return
+    seenAt += dir
+    setArtboard({ seed: seen[seenAt] })
+    syncArtboard(true)
+  }
+
   function randomise() {
-    setArtboard({ seed: freshSeed() })
+    const seed = freshSeed()
+    remember(seed)
+    setArtboard({ seed })
+    if (!artboardBox.hidden) syncArtboard(true)
   }
 
   function resetTool() {

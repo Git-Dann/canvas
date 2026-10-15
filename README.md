@@ -40,7 +40,7 @@ Brand: Emergency Orange (`#FF4F00`) on the Untitled UI v8 design system. See `do
 | Linear gradient | Colour | A palette as a gradient at any angle, smooth or banded |
 | Colour bands | Colour | Wavy strata or rings of colour |
 | Palette cards | Colour | A palette as swatches with hex values, for decks and brand pages |
-Every tool has: seeded randomise (R), undo and redo, palettes, and export to SVG, PNG at 1, 2 or 4 times, plain text (ASCII) or the clipboard. The artboard (8 presets plus custom sizes, background and seed) is one setting for the whole file, shared by every tool. Light and dark follow Foundry's own setting, then the OS; Canvas has no toggle of its own. Works on phones.
+Every tool has: randomise (R) with named variations you can step back through, undo and redo, palettes, and export to SVG, PNG at 1, 2 or 4 times, plain text (ASCII) or the clipboard. The artboard (8 presets plus custom sizes, background and seed) is one setting for the whole file, shared by every tool. Light and dark follow Foundry's own setting, then the OS; Canvas has no toggle of its own. Works on phones.
 
 ## Use it
 

@@ -148,9 +148,11 @@ test('the artboard is one setting shared by every tool, and it saves', async ({ 
   await expect(pop).toContainText('Every tool')
 
   await page.locator('#artboard-size').selectOption('story')
-  const seed = pop.locator('input[aria-label="Seed"]')
+  await pop.locator('summary', { hasText: 'Variation' }).click()
+  const seed = pop.locator('input[aria-label="Variation number"]')
   await seed.fill('4242')
   await seed.press('Enter')
+  await expect(seed).toHaveValue('4242')
   await pop.getByRole('button', { name: '#FF4F00', exact: true }).click()
   // Escape closes it and the button says what is set.
   await page.keyboard.press('Escape')
@@ -162,7 +164,7 @@ test('the artboard is one setting shared by every tool, and it saves', async ({ 
     await page.locator(`.tool-btn[data-tool="${tool}"]`).click()
     await expect(page.locator('.artboard svg'), tool).toHaveAttribute('viewBox', '0 0 1080 1920')
     await expect(page.locator('#artboard-btn'), tool).toContainText('1080 × 1920')
-    await expect(page.locator('.stage-bar'), tool).toContainText('seed 4242')
+    await expect(page.locator('.stage-bar span[title="Variation 4242"]'), tool).toBeVisible()
     await expect(page.locator('.artboard svg > rect').first(), tool).toHaveAttribute('fill', '#FF4F00')
   }
 
@@ -185,7 +187,7 @@ test('the artboard is one setting shared by every tool, and it saves', async ({ 
   for (const tool of ['shapes', 'mesh-gradient', 'dither']) {
     await reopened.locator(`.tool-btn[data-tool="${tool}"]`).click()
     await expect(reopened.locator('.artboard svg'), tool).toHaveAttribute('viewBox', '0 0 1080 1920')
-    await expect(reopened.locator('.stage-bar'), tool).toContainText('seed 4242')
+    await expect(reopened.locator('.stage-bar span[title="Variation 4242"]'), tool).toBeVisible()
   }
 })
 
@@ -261,4 +263,23 @@ test('no artboard size shows a light edge against a dark background', async ({ p
       expect(brightest, `${id} at ${vw}x${vh}`).toBeLessThan(60)
     }
   }
+})
+
+test('variations have names, and you can step back to one you liked', async ({ page }) => {
+  await open(page, 'flow-field')
+  await page.locator('#artboard-btn').click()
+  const pop = page.locator('#artboard-pop')
+  await expect(pop.getByRole('button', { name: 'New variation' })).toBeHidden()
+  await pop.locator('summary', { hasText: 'Variation' }).click()
+  const name = pop.locator('.variation-name')
+  const first = await name.textContent()
+  await expect(pop.getByRole('button', { name: 'Previous variation' })).toBeDisabled()
+  await pop.getByRole('button', { name: 'New variation' }).click()
+  await expect(name).not.toHaveText(first!)
+  const second = await name.textContent()
+  await pop.getByRole('button', { name: 'Previous variation' }).click()
+  await expect(name).toHaveText(first!)
+  await pop.getByRole('button', { name: 'Next variation' }).click()
+  await expect(name).toHaveText(second!)
+  await expect(page.locator('.stage-bar')).toContainText(second!)
 })
