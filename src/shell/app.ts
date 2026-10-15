@@ -155,6 +155,12 @@ export function mountApp(root: HTMLElement, doc: CanvasDoc, opts: { embedded: bo
     const scale = Math.min((r.width - pad) / width, (r.height - pad) / height, 1)
     artboard.style.width = `${Math.max(1, Math.floor(width * scale))}px`
     artboard.style.height = `${Math.max(1, Math.floor(height * scale))}px`
+    // Rounding to whole pixels can leave the artwork a hair short of the box, so
+    // the box wears the artwork's own background. The checkerboard is only for a
+    // genuinely transparent artboard (it used to show as white lines top and bottom).
+    const bg = s.doc.artboard.background
+    artboard.classList.toggle('is-transparent', bg === 'transparent')
+    artboard.style.backgroundColor = bg === 'transparent' ? '' : bg
     sizeInfo.textContent = `${width} × ${height} · ${Math.round(scale * 100)}% · seed ${s.doc.artboard.seed}`
   }
   new ResizeObserver(fit).observe(viewport)

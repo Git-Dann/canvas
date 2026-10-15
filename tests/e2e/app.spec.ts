@@ -223,3 +223,42 @@ test('the artboard dropdown stays on screen on a phone and closes on an outside 
   await page.mouse.click(5, 790)
   await expect(pop).toBeHidden()
 })
+
+test('no artboard size shows a light edge against a dark background', async ({ page }) => {
+  const ids = ['square', 'portrait', 'story', 'landscape', 'og', 'hero', 'poster', 'avatar']
+  for (const [vw, vh] of [[1440, 900], [1280, 620]] as const) {
+    await page.setViewportSize({ width: vw, height: vh })
+    // Dark theme, as reported: the stage around the board is dark too, so a light
+    // row can only come from the board itself.
+    await open(page, 'shapes', 'dark')
+    for (const id of ids) {
+      await page.locator('#artboard-btn').click()
+      await page.locator('#artboard-size').selectOption(id)
+      await page.keyboard.press('Escape')
+      // Escape returns focus to the button, whose tooltip can overlap the board.
+      await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur())
+      await page.mouse.move(vw - 1, vh - 1)
+      await expect(page.locator('.artboard')).not.toHaveClass(/is-busy/)
+      const shot = await page.locator('.artboard').screenshot()
+      const png = shot.toString('base64')
+      // Brightest pixel along the top and bottom two rows, decoded in the page.
+      const brightest = await page.evaluate(async (b64) => {
+        const img = new Image()
+        img.src = `data:image/png;base64,${b64}`
+        await img.decode()
+        const c = document.createElement('canvas')
+        c.width = img.width
+        c.height = img.height
+        const ctx = c.getContext('2d')!
+        ctx.drawImage(img, 0, 0)
+        let max = 0
+        for (const y of [0, 1, img.height - 2, img.height - 1]) {
+          const d = ctx.getImageData(0, y, img.width, 1).data
+          for (let i = 0; i < d.length; i += 4) max = Math.max(max, (d[i] + d[i + 1] + d[i + 2]) / 3)
+        }
+        return max
+      }, png)
+      expect(brightest, `${id} at ${vw}x${vh}`).toBeLessThan(60)
+    }
+  }
+})

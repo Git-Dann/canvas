@@ -350,3 +350,9 @@
 
 /* A tooltip on a button whose dropdown is open would sit on top of the dropdown. */
 [aria-expanded='true'][data-tip]::after { display: none !important; }
+
+/* Native number spinners are noise here: stepping a random seed by one means
+   nothing, and the sliders already step their values. Arrow keys still work. */
+input[type='number'] { appearance: textfield; -moz-appearance: textfield; }
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
