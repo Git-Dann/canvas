@@ -28,6 +28,14 @@ const store = (k: string, v?: string) => {
   return null
 }
 
+/**
+ * True when this shell is Foundry's hosted copy at /canvas, not a saved file on
+ * someone's disk. Same test as Deck's: a saved artwork has no Foundry to go back
+ * to, so it never shows a dead link.
+ */
+export const servedByFoundry = () =>
+  /^https?:$/.test(location.protocol) && (location.pathname === '/canvas' || location.pathname.startsWith('/canvas/'))
+
 export function mountApp(root: HTMLElement, doc: CanvasDoc, opts: { embedded: boolean }) {
   const s = new Store(doc)
   let lastSaved = opts.embedded ? JSON.stringify(doc) : ''
@@ -51,6 +59,9 @@ export function mountApp(root: HTMLElement, doc: CanvasDoc, opts: { embedded: bo
       h('span', { class: 'wordmark-mark', html: icon.mark }),
       h('span', { class: 'wordmark-name' }, 'Canvas'),
       h('span', { class: 'wordmark-by' }, 'by Gitwork')),
+    servedByFoundry()
+      ? h('a', { class: 'back-link', href: '/app', title: 'Back to Foundry' }, '← Foundry')
+      : null,
     h('span', { class: 'topbar-divider' }),
     title,
     saveState,

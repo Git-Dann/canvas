@@ -103,3 +103,20 @@ test('save writes a self-contained file that reopens to the same artwork', async
   await expect(page2.locator('.tool-btn[data-tool="tiles"]')).toHaveAttribute('aria-current', 'page')
   await expect.poll(() => page2.locator('.artboard').innerHTML()).toBe(artwork)
 })
+
+test('shows a way back to Foundry only when hosted at /canvas', async ({ page, context }) => {
+  await open(page, 'shapes')
+  await expect(page.getByRole('link', { name: '← Foundry' })).toHaveCount(0)
+
+  const html = readFileSync('dist/index.html', 'utf8')
+  const hosted = await context.newPage()
+  await hosted.route('http://foundry.test/canvas', (r) => r.fulfill({ body: html, contentType: 'text/html' }))
+  await hosted.goto('http://foundry.test/canvas')
+  await expect(hosted.getByRole('link', { name: '← Foundry' })).toHaveAttribute('href', '/app')
+})
+
+test("follows Foundry's theme setting when Canvas has none of its own", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('gitwork.theme.v1', 'dark'))
+  await page.goto('/?tool=shapes&seed=1')
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
+})

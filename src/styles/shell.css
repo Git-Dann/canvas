@@ -44,6 +44,17 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .wordmark-mark svg { width: 18px; height: 18px; }
 .wordmark-name { font: 600 var(--text-md) / 1 var(--font-body); letter-spacing: -0.01em; }
 .wordmark-by { font: 500 11px / 1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-text-quaternary); }
+.back-link {
+  flex: none;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  font: 500 11px / 1 var(--font-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+  text-decoration: none;
+}
+.back-link:hover { color: var(--color-text-primary); background: var(--color-bg-primary_hover); }
 .topbar-divider { width: 1px; height: 24px; background: var(--color-border-secondary); margin: 0 var(--spacing-xs); flex: none; }
 .title-input {
   min-width: 80px;
