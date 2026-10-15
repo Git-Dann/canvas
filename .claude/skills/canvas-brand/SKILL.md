@@ -31,7 +31,8 @@ Full scale 25 to 950 in `tokens.css` and `src/core/palette.ts` (`EMERGENCY`).
 
 - Use semantic tokens (`--color-bg-primary`, `--color-text-secondary`), never primitives, in UI CSS. Primitives are for palettes and token definitions.
 - Every new colour pair: check contrast with `contrast()` in `core/palette.ts`. Body text 4.5:1, large text and UI parts 3:1.
-- Both themes, always. Dark mode is `:root[data-theme='dark']`; check both screenshots.
+- Both themes, always. Dark mode is `:root[data-theme='dark']`; check both screenshots. Canvas has no theme toggle: it follows Foundry's `gitwork.theme.v1` live (then the OS). Never add a Canvas-only one.
+- Visually hidden inputs (toggles, file drops) must sit inside a positioned parent. An unanchored one lands outside the scrolling rail, and focusing it scrolls the whole frame up the page.
 - Radius: controls `--radius-md` (8px), cards and drop zones `--radius-lg`, pills only for badges and toggles.
 - Type: Inter for UI, JetBrains Mono for numbers, section headers and ASCII. Both embedded, zero external requests.
 - Warnings use Untitled yellow, errors red. Never use orange to mean "warning": it is the brand.

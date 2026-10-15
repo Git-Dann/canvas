@@ -1,6 +1,6 @@
 import type { Pt } from '../core/svg'
 import type { Tool } from '../core/types'
-import { el, linePath, smoothPath, svgDoc } from '../core/svg'
+import { el, f, linePath, smoothPath, svgDoc } from '../core/svg'
 import { createNoise2D, fbm } from '../core/rng'
 import { gradientAt, palette } from '../core/palette'
 import { bool, num, opacityParam, paletteParam, str, strokeWidthParam } from './common'
@@ -30,6 +30,13 @@ export const flowField: Tool = {
     strokeWidthParam(1.25, 12),
     opacityParam(0.8),
     { key: 'smooth', label: 'Smooth curves', section: 'Style', type: 'toggle', default: true },
+    { key: 'blur', label: 'Blur', section: 'Blur', type: 'number', default: 0, min: 0, max: 24, step: 0.5, unit: 'px', hint: 'At 1080px; scales with the artboard' },
+    {
+      key: 'blurMode', label: 'Blur applies to', section: 'Blur', type: 'segmented', default: 'depth',
+      options: [{ value: 'depth', label: 'Depth of field' }, { value: 'all', label: 'Every line' }],
+      visibleIf: (p) => (p.blur as number) > 0,
+      hint: 'Depth of field keeps a third of the lines sharp and softens the rest in two steps',
+    },
     paletteParam('ember'),
     {
       key: 'colorBy', label: 'Colour by', section: 'Colour', type: 'segmented', default: 'line',
@@ -47,6 +54,8 @@ export const flowField: Tool = {
     const seeding = str(p, 'seeding')
     const cols = Math.ceil(Math.sqrt((count * width) / height))
     const rows = Math.ceil(count / cols)
+    const blur = num(p, 'blur') * (Math.min(width, height) / 1080)
+    const depth = blur > 0 && str(p, 'blurMode') === 'depth'
 
     const groups = new Map<string, string[]>()
     for (let i = 0; i < count; i++) {
@@ -73,15 +82,30 @@ export const flowField: Tool = {
       const by = str(p, 'colorBy')
       const c = by === 'single' ? colors[0] : by === 'line' ? colors[i % colors.length] : gradientAt(colors, pts[0][1] / height)
       const d = bool(p, 'smooth') && pts.length > 2 ? smoothPath(pts) : linePath(pts)
-      const list = groups.get(c) ?? []
+      // Depth layer by index, not rng, so turning blur on never moves a line.
+      const layer = depth ? i % 3 : blur > 0 ? 2 : 0
+      const key = `${layer}|${c}`
+      const list = groups.get(key) ?? []
       list.push(d)
-      groups.set(c, list)
+      groups.set(key, list)
     }
-    // One <path> per colour keeps the file small and the DOM light.
+    // One <path> per colour per layer keeps the file small and the DOM light.
+    // Far layers draw first so the sharp lines sit on top.
+    const layers = ['', '', '']
+    for (const [key, ds] of groups) {
+      const [layer, c] = key.split('|')
+      layers[+layer] += el('path', { d: ds.join(''), fill: 'none', stroke: c, 'stroke-width': num(p, 'strokeWidth'), 'stroke-linecap': 'round', 'stroke-linejoin': 'round' })
+    }
+    let defs = ''
     let body = ''
-    for (const [c, ds] of groups) {
-      body += el('path', { d: ds.join(''), fill: 'none', stroke: c, 'stroke-width': num(p, 'strokeWidth'), 'stroke-linecap': 'round', 'stroke-linejoin': 'round' })
+    for (let l = 2; l >= 0; l--) {
+      if (!layers[l]) continue
+      const sd = l === 0 ? 0 : (blur * l) / 2
+      if (sd > 0) {
+        defs += el('filter', { id: `ff-blur-${l}`, filterUnits: 'userSpaceOnUse', x: -width * 0.1, y: -height * 0.1, width: width * 1.2, height: height * 1.2 }, el('feGaussianBlur', { stdDeviation: f(sd) }))
+        body += `<g filter="url(#ff-blur-${l})">${layers[l]}</g>`
+      } else body += layers[l]
     }
-    return { svg: svgDoc({ width, height, background, body: `<g opacity="${num(p, 'opacity')}">${body}</g>` }) }
+    return { svg: svgDoc({ width, height, background, defs, body: `<g opacity="${num(p, 'opacity')}">${body}</g>` }) }
   },
 }

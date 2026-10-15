@@ -6,6 +6,10 @@
 *, *::before, *::after { box-sizing: border-box; }
 [hidden] { display: none !important; }
 html, body { margin: 0; height: 100%; }
+/* The app is a fixed frame: only its rails and stage scroll. `clip` (unlike
+   `hidden`) also refuses programmatic scrolling, so focus or scrollIntoView
+   can never shift the whole frame up the page. Phones scroll normally. */
+@media (min-width: 861px) { html, body { overflow: clip; } }
 body {
   background: var(--color-bg-primary);
   color: var(--color-text-primary);
@@ -164,9 +168,23 @@ button, input, select, textarea { font: inherit; color: inherit; }
   overflow-y: auto;
   border-left: 1px solid var(--color-border-secondary);
   background: var(--color-bg-primary);
-  counter-reset: sec;
   padding-bottom: var(--spacing-4xl);
 }
+/* The artboard block is shared by every tool, so it sits above the tool's
+   settings, unnumbered, and the tool's sections count from 01 under it. */
+.props-global { border-bottom: 2px solid var(--color-border-primary); }
+.props-tool { counter-reset: sec; }
+.props-head--global { color: var(--color-text-secondary); }
+.props-global .props-head::before { content: none; }
+.props-head-note {
+  margin-left: var(--spacing-md);
+  padding: 2px 6px;
+  border-radius: var(--radius-xs, 4px);
+  background: var(--color-bg-brand-primary);
+  color: var(--color-text-brand-secondary);
+  letter-spacing: 0.08em;
+}
+.props-reset { padding: var(--spacing-lg) var(--spacing-xl) 0; }
 .props-section { border-bottom: 1px solid var(--color-border-secondary); }
 .props-head {
   display: flex;

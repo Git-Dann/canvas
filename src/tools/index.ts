@@ -11,6 +11,27 @@ import { tiles } from './tiles'
 import { halftone } from './halftone'
 import { ascii } from './ascii'
 import { aura } from './aura'
+import { phyllotaxis } from './phyllotaxis'
+import { isometric } from './isometric'
+import { starburst } from './starburst'
+import { orbits } from './orbits'
+import { waves } from './waves'
+import { voronoi } from './voronoi'
+import { dotGrid } from './dot-grid'
+import { opArt } from './op-art'
+import { hexGrid } from './hex-grid'
+import { circleText } from './circle-text'
+import { waveText } from './wave-text'
+import { typeStack } from './type-stack'
+import { monogram } from './monogram'
+import { mosaic } from './mosaic'
+import { dither } from './dither'
+import { scanlines } from './scanlines'
+import { stipple } from './stipple'
+import { meshGradient } from './mesh-gradient'
+import { linearGradient } from './linear-gradient'
+import { colourBands } from './colour-bands'
+import { paletteCards } from './palette-cards'
 // new-tool:imports
 
 export const TOOLS: Tool[] = [
@@ -23,6 +44,27 @@ export const TOOLS: Tool[] = [
   halftone,
   ascii,
   aura,
+  phyllotaxis,
+  isometric,
+  starburst,
+  orbits,
+  waves,
+  voronoi,
+  dotGrid,
+  opArt,
+  hexGrid,
+  circleText,
+  waveText,
+  typeStack,
+  monogram,
+  mosaic,
+  dither,
+  scanlines,
+  stipple,
+  meshGradient,
+  linearGradient,
+  colourBands,
+  paletteCards,
   // new-tool:registry
 ]
 

@@ -15,7 +15,8 @@ import { applyVisibility, colourPicker, control } from './controls'
 import { resolveRasters } from './rasters'
 import { copySvg, exportPng, exportSvg, exportText, slug } from './export'
 
-const THEME_KEY = 'canvas-theme'
+const FOUNDRY_THEME_KEY = 'gitwork.theme.v1'
+const ARTBOARD_SECTION = 'Artboard'
 const LAST_DOC_KEY = 'canvas-last-doc'
 
 const store = (k: string, v?: string) => {
@@ -47,7 +48,6 @@ export function mountApp(root: HTMLElement, doc: CanvasDoc, opts: { embedded: bo
   const saveState = h('span', { class: 'save-state', 'aria-live': 'polite' })
   const undoBtn = h('button', { class: 'btn btn-tertiary btn-icon', 'aria-label': 'Undo', 'data-tip': 'Undo  ⌘Z', html: icon.undo })
   const redoBtn = h('button', { class: 'btn btn-tertiary btn-icon', 'aria-label': 'Redo', 'data-tip': 'Redo  ⇧⌘Z', html: icon.redo })
-  const themeBtn = h('button', { class: 'btn btn-tertiary btn-icon', 'aria-label': 'Switch light or dark', 'data-tip': 'Light or dark' })
   const shuffleBtn = h('button', { class: 'btn btn-secondary', 'data-tip': 'New seed  R', html: `${icon.shuffle}<span class="label">Randomise</span>` })
   const saveBtn = h('button', { class: 'btn btn-secondary', 'data-tip': 'Save this file  ⌘S', html: `${icon.save}<span class="label">Save</span>` })
   const exportBtn = h('button', { class: 'btn btn-primary', 'aria-haspopup': 'menu', 'aria-expanded': 'false', html: `${icon.download}<span class="label">Export</span>${icon.chevronDown}` })
@@ -67,7 +67,7 @@ export function mountApp(root: HTMLElement, doc: CanvasDoc, opts: { embedded: bo
     title,
     saveState,
     h('span', { class: 'topbar-spacer' }),
-    h('div', { class: 'topbar-group' }, undoBtn, redoBtn, themeBtn),
+    h('div', { class: 'topbar-group' }, undoBtn, redoBtn),
     h('div', { class: 'topbar-group' }, shuffleBtn, saveBtn, h('div', { class: 'topbar-group' }, exportBtn, menu)))
 
   const toolsNav = h('nav', { class: 'tools', 'aria-label': 'Tools' })
@@ -87,7 +87,12 @@ export function mountApp(root: HTMLElement, doc: CanvasDoc, opts: { embedded: bo
   const stageInfo = h('div', { class: 'stage-tool' })
   const sizeInfo = h('span', {})
   const stage = h('main', { class: 'stage' }, viewport, h('div', { class: 'stage-bar' }, stageInfo, sizeInfo))
-  const props = h('aside', { class: 'props', 'aria-label': 'Settings' })
+  // The artboard is one setting for the whole document, shared by every tool,
+  // so it sits in its own block above the tool's settings and is not rebuilt
+  // when the tool changes. Tool sections number from 01 under it.
+  const artboardBox = h('div', { class: 'props-global' })
+  const toolBox = h('div', { class: 'props-tool' })
+  const props = h('aside', { class: 'props', 'aria-label': 'Settings' }, artboardBox, toolBox)
   const toasts = h('div', { class: 'toasts', 'aria-live': 'polite' })
 
   root.append(h('div', { class: 'app' }, topbar, alert, toolsNav, stage, props), toasts)
@@ -159,6 +164,10 @@ export function mountApp(root: HTMLElement, doc: CanvasDoc, opts: { embedded: bo
     const open = !collapsed.has(name)
     const body = h('div', { class: 'props-body', id, hidden: !open }, ...children)
     const head = h('button', { class: 'props-head', 'aria-expanded': String(open), 'aria-controls': id }, name)
+    if (name === ARTBOARD_SECTION) {
+      head.classList.add('props-head--global')
+      head.append(h('span', { class: 'props-head-note' }, 'Every tool'))
+    }
     head.addEventListener('click', () => {
       const nowOpen = body.hidden
       body.hidden = !nowOpen
@@ -178,8 +187,25 @@ export function mountApp(root: HTMLElement, doc: CanvasDoc, opts: { embedded: bo
       list.push(control(spec, p[spec.key], ev))
       bySection.set(spec.section, list)
     }
-    props.replaceChildren(...[...bySection].map(([name, els]) => section(name, ...els)), artboardSection())
-    applyVisibility(props, t.params, p)
+    const reset = h('div', { class: 'props-reset' }, h('button', { class: 'btn btn-tertiary', onclick: resetTool }, `Reset ${t.name} settings`))
+    toolBox.replaceChildren(...[...bySection].map(([name, els]) => section(name, ...els)), reset)
+    applyVisibility(toolBox, t.params, p)
+  }
+
+  /** Rebuild the artboard block only when it shows something out of date. */
+  let shownArtboard = ''
+  function syncArtboard(force = false) {
+    const key = JSON.stringify(s.doc.artboard)
+    if (!force && key === shownArtboard) return
+    // Never yank a control out from under a person mid-edit; a structural
+    // change (undo, restore, open) always wins.
+    if (!force && artboardBox.contains(document.activeElement)) {
+      const seed = artboardBox.querySelector<HTMLInputElement>('input[aria-label="Seed"]')
+      if (seed && seed !== document.activeElement) seed.value = String(s.doc.artboard.seed)
+      return
+    }
+    shownArtboard = key
+    artboardBox.replaceChildren(artboardSection())
   }
 
   function artboardSection() {
@@ -214,11 +240,10 @@ export function mountApp(root: HTMLElement, doc: CanvasDoc, opts: { embedded: bo
     })
     const lbl = (text: string, el: HTMLElement, forId?: string) =>
       h('div', { class: 'field' }, h('label', { class: 'field-label', for: forId }, text), el)
-    return section('Artboard',
+    return section(ARTBOARD_SECTION,
       lbl('Size', h('div', { class: 'field' }, preset, custom), 'artboard-size'),
       lbl('Background', bg),
-      lbl('Seed', h('div', { class: 'seed-row' }, seed, roll)),
-      h('div', { class: 'field' }, h('button', { class: 'btn btn-tertiary', onclick: resetTool }, `Reset ${tool().name} settings`)))
+      lbl('Seed', h('div', { class: 'seed-row' }, seed, roll)))
   }
 
   // ── actions ──────────────────────────────────────────────────────────────
@@ -317,16 +342,15 @@ export function mountApp(root: HTMLElement, doc: CanvasDoc, opts: { embedded: bo
   })
 
   // ── theme ────────────────────────────────────────────────────────────────
-  const applyTheme = (t: 'light' | 'dark') => {
-    document.documentElement.dataset.theme = t
-    themeBtn.innerHTML = t === 'dark' ? icon.sun : icon.moon
+  // No toggle of its own: Canvas follows Foundry's setting live, as Deck does.
+  // Flipping it in a Foundry tab reaches this window through the storage event.
+  const media = matchMedia('(prefers-color-scheme: dark)')
+  const syncTheme = () => {
+    const f = store(FOUNDRY_THEME_KEY)
+    document.documentElement.dataset.theme = f === 'light' || f === 'dark' ? f : media.matches ? 'dark' : 'light'
   }
-  applyTheme(document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light')
-  themeBtn.addEventListener('click', () => {
-    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'
-    applyTheme(next)
-    store(THEME_KEY, next)
-  })
+  addEventListener('storage', (e) => { if (e.key === FOUNDRY_THEME_KEY || e.key === null) syncTheme() })
+  media.addEventListener('change', syncTheme)
 
   // ── chrome state ─────────────────────────────────────────────────────────
   function paintChrome() {
@@ -348,14 +372,15 @@ export function mountApp(root: HTMLElement, doc: CanvasDoc, opts: { embedded: bo
   let recoveryTimer = 0
   s.subscribe((kind: ChangeKind) => {
     if (kind === 'structure') buildProps()
-    else if (kind === 'value') applyVisibility(props, tool().params, params())
+    else if (kind === 'value') applyVisibility(toolBox, tool().params, params())
+    if (kind !== 'meta') syncArtboard(kind === 'structure')
     paintChrome()
     if (kind !== 'meta') queueRender()
     clearTimeout(recoveryTimer)
     recoveryTimer = window.setTimeout(() => void putRecovery(s.doc), 800)
   })
 
-  title.addEventListener('input', () => s.update((d) => (d.title = title.value.trim() || 'Untitled artwork'), { transient: true, kind: 'meta' }))
+  title.addEventListener('input', () => s.update((d) => (d.title = title.value.trim() || 'Gitwork artwork'), { transient: true, kind: 'meta' }))
   title.addEventListener('change', () => s.commit())
   title.addEventListener('keydown', (e) => e.key === 'Enter' && title.blur())
   undoBtn.addEventListener('click', () => s.undo())
@@ -415,6 +440,7 @@ export function mountApp(root: HTMLElement, doc: CanvasDoc, opts: { embedded: bo
   }
 
   buildProps()
+  syncArtboard(true)
   paintChrome()
   renderNow()
   void offerRecovery()

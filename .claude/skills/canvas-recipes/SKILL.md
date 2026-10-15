@@ -44,6 +44,19 @@ Call rng in a fixed order. Adding an rng call earlier in render shifts every lat
 | Halftone marks on a rotated grid | `markPath()` in `tools/halftone.ts` |
 | Brightness to characters | `asciiGrid()` and `CHARSETS` in `tools/ascii.ts` |
 | Blur, grain and blend via SVG filters | `tools/aura.ts` |
+| Depth-of-field blur by layer (never moves a line) | `tools/flow-field.ts` |
+| Golden-angle spiral | `tools/phyllotaxis.ts` |
+| Isometric projection with three shaded faces | `tools/isometric.ts` |
+| Voronoi cells by half-plane clipping, Lloyd relaxation | `voronoiCells()` in `tools/voronoi.ts` |
+| Hexagon grid, flat or pointy | `tools/hex-grid.ts` |
+| Warping stripe boundaries around a lens | `tools/op-art.ts` |
+| Text on a path (rings, waves) with `textPath` | `tools/circle-text.ts`, `tools/wave-text.ts` |
+| Rows stretched to the measure with `textLength` | `tools/type-stack.ts` |
+| Initials and a contrast-safe ink | `initials()` in `tools/monogram.ts`, `inkFor()` in `tools/common.ts` |
+| One-bit dither (ordered, Floyd–Steinberg, Atkinson) | `ditherGrid()` in `tools/dither.ts` |
+| Density sampling (stipple) | `tools/stipple.ts` |
+| Mesh gradient from radial gradients | `tools/mesh-gradient.ts` |
+| Image or noise source for any Image tool | `imageSourceParams()`, `imageRasters`, `toneSource()` in `tools/common.ts` |
 
 ## Colour (`src/core/palette.ts`)
 

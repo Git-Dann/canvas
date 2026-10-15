@@ -27,9 +27,9 @@ URL / embedded doc ──► parseDoc ──► Store (undo, transient drags)
 
 ## The document
 
-`CanvasDoc` in `src/core/doc.ts`: `docId`, `title`, `tool`, `artboard` (size, background, seed) and `params` per tool, so switching tools keeps each tool's settings. Values are sanitised against the tool's specs on every read, so files survive param changes. Uploaded images are stored as downscaled data URLs inside the file.
+`CanvasDoc` in `src/core/doc.ts`: `docId`, `title`, `tool`, `artboard` (size, background, seed), which is one setting for the whole document and shared by every tool, and `params` per tool, so switching tools keeps each tool's settings. The shell shows the artboard in its own block above the tool's settings (`.props-global`) and never rebuilds it on a tool switch. Values are sanitised against the tool's specs on every read, so files survive param changes. Uploaded images are stored as downscaled data URLs inside the file.
 
 ## Tests
 
 - `tests/unit`: renders every tool at three sizes, every select option and both param extremes; checks valid SVG, no NaN, size limits, determinism, doc round-trip.
-- `tests/e2e`: runs the built single file. Every tool in both themes, phone width, undo, conditional fields, randomise, PNG export, and save then reopen the saved file to the identical artwork.
+- `tests/e2e`: runs the built single file. Every tool in both themes (switched through Foundry's setting, as a person would), phone width, the artboard surviving every tool switch and a save, no control able to scroll the frame, undo, conditional fields, randomise, PNG export, and save then reopen the saved file to the identical artwork.

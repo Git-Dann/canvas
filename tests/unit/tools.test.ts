@@ -105,3 +105,85 @@ describe('brand', () => {
     expect(contrast(EMERGENCY[700], NEUTRAL[0])).toBeGreaterThanOrEqual(4.5)
   })
 })
+
+describe('the suite', () => {
+  it('has at least five tools in every group', async () => {
+    const counts = new Map<string, number>()
+    for (const t of TOOLS) counts.set(t.group, (counts.get(t.group) ?? 0) + 1)
+    for (const g of ['Shape', 'Line', 'Pattern', 'Type', 'Image', 'Colour']) expect(counts.get(g), g).toBeGreaterThanOrEqual(5)
+  })
+})
+
+describe('flow field blur', () => {
+  const ff = TOOLS.find((t) => t.id === 'flow-field')!
+  const paths = (svg: string) => [...svg.matchAll(/ d="([^"]+)"/g)].map((m) => m[1]).join('').split('M').sort().join('M')
+
+  it('adds blur filters only when asked', () => {
+    expect(render(ff, 800, 800).svg).not.toContain('feGaussianBlur')
+    expect(render(ff, 800, 800, 42, { blur: 8 }).svg).toContain('feGaussianBlur')
+  })
+
+  it('never moves a line when blur is turned on, in either mode', () => {
+    const sharp = paths(render(ff, 800, 800).svg)
+    expect(paths(render(ff, 800, 800, 42, { blur: 8, blurMode: 'depth' }).svg)).toBe(sharp)
+    expect(paths(render(ff, 800, 800, 42, { blur: 8, blurMode: 'all' }).svg)).toBe(sharp)
+  })
+
+  it('keeps a sharp layer in depth of field, and none when blurring everything', () => {
+    const depth = render(ff, 800, 800, 42, { blur: 8, blurMode: 'depth' }).svg
+    expect(depth).toContain('ff-blur-1')
+    expect(depth).toContain('ff-blur-2')
+    expect(depth).toMatch(/<\/g><path/)
+    const all = render(ff, 800, 800, 42, { blur: 8, blurMode: 'all' }).svg
+    expect(all).not.toContain('ff-blur-1')
+  })
+})
+
+describe('monogram', () => {
+  it('sets near-black initials on Emergency Orange, never white', async () => {
+    const { initials } = await import('../../src/tools/monogram')
+    expect(initials('Dan Lindsay', 2)).toBe('DL')
+    expect(initials('gitwork', 2)).toBe('GI')
+    expect(initials('gitwork', 1)).toBe('G')
+    const mono = TOOLS.find((t) => t.id === 'monogram')!
+    expect(render(mono, 512, 512, 1, { palette: 'emergency', swatch: 1 }).svg).toMatch(/<text[^>]*fill="#0A0A0A"/)
+  })
+})
+
+describe('dither', () => {
+  it('inks dark tones and leaves light ones, for every method', async () => {
+    const { ditherGrid } = await import('../../src/tools/dither')
+    for (const m of ['bayer', 'floyd', 'atkinson']) {
+      expect([...ditherGrid(new Float32Array(16).fill(0), 4, 4, m)].every((v) => v === 1), m).toBe(true)
+      expect([...ditherGrid(new Float32Array(16).fill(1), 4, 4, m)].every((v) => v === 0), m).toBe(true)
+    }
+  })
+})
+
+describe('voronoi', () => {
+  it('tiles the artboard with one cell per site', async () => {
+    const { voronoiCells } = await import('../../src/tools/voronoi')
+    const cells = voronoiCells([[100, 100], [300, 100], [200, 300]], 400, 400)
+    expect(cells).toHaveLength(3)
+    const area = (poly: readonly (readonly [number, number])[]) =>
+      Math.abs(poly.reduce((s, [x0, y0], i) => { const [x1, y1] = poly[(i + 1) % poly.length]; return s + x0 * y1 - x1 * y0 }, 0)) / 2
+    expect(cells.reduce((s, c) => s + area(c), 0)).toBeCloseTo(160000, 0)
+  })
+})
+
+describe('artboard', () => {
+  it('is one setting for the document, kept when the tool changes and through a save', () => {
+    const doc = newDoc('shapes', 5)
+    doc.artboard = { preset: 'story', width: 1080, height: 1920, background: '#FF4F00', seed: 77 }
+    for (const t of TOOLS) {
+      doc.tool = t.id
+      const back = parseDoc(JSON.stringify(doc), 'shapes')!
+      expect(back.tool).toBe(t.id)
+      expect(back.artboard).toEqual(doc.artboard)
+    }
+  })
+
+  it('names new work Gitwork, not Untitled', () => {
+    expect(newDoc('shapes').title).toBe('Gitwork artwork')
+  })
+})

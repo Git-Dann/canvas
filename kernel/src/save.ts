@@ -57,7 +57,7 @@ export function serializeFile(doc: KernelDoc): string {
 }
 
 export function suggestedFileName(doc: KernelDoc, suffix = ''): string {
-  const base = doc.title.replace(/[^\w\d-]+/g, '_').replace(/^_+|_+$/g, '') || 'Untitled'
+  const base = doc.title.replace(/[^\w\d-]+/g, '_').replace(/^_+|_+$/g, '') || 'Gitwork'
   return `${base}${suffix ? `-${suffix}` : ''}.${appConfig().fileSuffix}.html`
 }
 

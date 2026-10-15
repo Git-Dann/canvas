@@ -14,14 +14,12 @@
     -->
     <script>
       // Set the theme before first paint. Per-viewer only; never saved in the doc.
+      // Canvas has no theme of its own: it follows Foundry's setting (the key
+      // Foundry's ThemeProvider writes: system | light | dark), then the OS.
       try {
-        // Canvas's own choice wins; otherwise follow Foundry's setting (the same
-        // key Foundry's ThemeProvider writes), then the OS.
-        var t = localStorage.getItem('canvas-theme')
         var f = localStorage.getItem('gitwork.theme.v1')
-        if (!t && (f === 'light' || f === 'dark')) t = f
-        if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-        document.documentElement.dataset.theme = t
+        document.documentElement.dataset.theme =
+          f === 'light' || f === 'dark' ? f : matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
       } catch (e) {
         document.documentElement.dataset.theme = 'light'
       }

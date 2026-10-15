@@ -28,7 +28,7 @@ export const PALETTES: Palette[] = [
   { id: 'mono-light', name: 'Mono light', colors: [NEUTRAL[50], NEUTRAL[300], NEUTRAL[500]] },
   { id: 'mono-dark', name: 'Mono dark', colors: [NEUTRAL[950], NEUTRAL[700], NEUTRAL[400]] },
   { id: 'blueprint', name: 'Blueprint', colors: ['#BFDBFE', '#60A5FA', NEUTRAL[50], EMERGENCY[500]] },
-  { id: 'untitled', name: 'Untitled', colors: [EMERGENCY[500], '#7C3AED', '#2563EB', '#0D9488', '#16A34A', '#FACC15'] },
+  { id: 'untitled', name: 'Untitled UI', colors: [EMERGENCY[500], '#7C3AED', '#2563EB', '#0D9488', '#16A34A', '#FACC15'] },
   { id: 'dusk', name: 'Dusk', colors: ['#6D28D9', '#DB2777', EMERGENCY[500], '#FACC15'] },
   { id: 'sea', name: 'Sea', colors: ['#14B8A6', '#2563EB', '#99F6E4', NEUTRAL[50]] },
 ]

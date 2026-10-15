@@ -60,7 +60,7 @@ export function newDoc(tool: string, seed = 1): CanvasDoc {
   const now = Date.now()
   return {
     docId: uuid(),
-    title: 'Untitled artwork',
+    title: 'Gitwork artwork',
     format: DOC_FORMAT,
     v: DOC_VERSION,
     tool,
